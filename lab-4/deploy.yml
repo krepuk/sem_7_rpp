@@ -1,0 +1,46 @@
+name: Deploy to GitHub Pages
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get Version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Setup build
+        run: |
+          # Создаем папку для текущей версии
+          mkdir -p ${{ env.VERSION }}/en
+          mkdir -p ${{ env.VERSION }}/ru
+          
+          # Копируем английскую версию
+          cp en/index.html ${{ env.VERSION }}/en/
+          # Исправляем ссылку "Back to main page"
+          sed -i 's|../index.html|../../index.html|g' ${{ env.VERSION }}/en/index.html
+          
+          # Копируем русскую версию  
+          cp ru/index.html ${{ env.VERSION }}/ru/
+          # Исправляем ссылку "На главную"
+          sed -i 's|../index.html|../../index.html|g' ${{ env.VERSION }}/ru/index.html
+          
+          # Создаем основной index.html для версии
+          cp index.html ${{ env.VERSION }}/
+          # Исправляем ссылки в основном index.html
+          sed -i 's|href="en/|href="./en/|g' ${{ env.VERSION }}/index.html
+          sed -i 's|href="ru/|href="./ru/|g' ${{ env.VERSION }}/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
+          keep_files: true
+          force_orphan: false
