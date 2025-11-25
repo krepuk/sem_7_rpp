@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Load Balancer Manager</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .status-up { color: green; font-weight: bold; }
+        .status-down { color: red; font-weight: bold; }
+        .box { border: 1px solid #ccc; padding: 1rem; border-radius: 5px; background: #f9f9f9; }
+        button { cursor: pointer; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>🖥️ Панель управления балансировщиком</h1>
+
+    <div class="box">
+        <h3>Добавить новый инстанс</h3>
+        <form action="/add_instance" method="POST">
+            <input type="text" name="ip" placeholder="IP (например, 127.0.0.1)" value="127.0.0.1" required>
+            <input type="text" name="port" placeholder="Порт (например, 5001)" required>
+            <button type="submit">Добавить</button>
+        </form>
+    </div>
+
+    <h3>Текущий пул инстансов</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>URL</th>
+                <th>Статус</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for instance in instances %}
+            <tr>
+                <td>{{ loop.index0 }}</td>
+                <td>{{ instance.url }}</td>
+                <td>
+                    {% if instance.healthy %}
+                        <span class="status-up">Доступен</span>
+                    {% else %}
+                        <span class="status-down">Недоступен</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form action="/remove_instance" method="POST" style="margin:0;">
+                        <input type="hidden" name="index" value="{{ loop.index0 }}">
+                        <button type="submit" style="color:red;">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align:center;">Пул пуст. Добавьте инстансы.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <hr>
+    <h3>Проверка работы</h3>
+    <p>Чтобы проверить балансировку, перейдите по ссылке (нажимайте F5 для обновления):</p>
+    <a href="/process" target="_blank"><button style="font-size: 1.2rem;"> Сделать запрос/process</button></a>
+
+</body>
+</html>
